@@ -9,28 +9,23 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import os
-
-# Импорт моделей и базы данных
 from . import models, schemas
 from .database import SessionLocal, engine
 
-# Создание таблиц
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
 
-# Настройки CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500"],  # Явное указание origin
+    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Настройки безопасности
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -38,7 +33,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# Dependency для получения сессии БД
 def get_db():
     db = SessionLocal()
     try:
@@ -46,7 +40,6 @@ def get_db():
     finally:
         db.close()
 
-# Хелпер-функции
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -91,7 +84,6 @@ async def get_current_user(
         raise credentials_exception
     return user
 
-# Роуты
 @app.post("/token", response_model=schemas.Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
